@@ -1,0 +1,7 @@
+- The NeoDev compiler (NeoDev.zip) is used in developing for the Neo Geo, CPS-1, IGS PGM, and a few console systems. 	
+- The SNASM68K assembler (SNASM68K.7z) is needed to reassemble the Neo Geo CD and IGS PGM demos. 	
+- The Z-80 (z80asm.zip) assembler and linker, needed to reassemble the demos. (Charles Doty/Alan Baldwin) 	
+- The 68000 assembler and linker (jas.zip), needed to reassemble the demos. (Charles Doty/Paul Lee) 	
+- Sega Genesis C Compiler. the 'LD.EXE' file is needed to recompile the demos. It must be renamed 'SEGALD.EXE' to work. (Paul Lee) 	
+- Intelligent reassembler(PC) (irapc200.zip) is a 68000 disassembler. Also included is 'INTER.EXE', which combines odd and even split files into one interleaved file. (Antiriad) 	
+- Maccer (maccer-0_23_dos.zip) is a preprocessor that adds enhancements (including binary files, etc) to the JAS assembler. (Michael Hope) 

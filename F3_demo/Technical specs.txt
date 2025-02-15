@@ -1,0 +1,342 @@
+System Information:
+    4 scrolling layers (512x512 or 1024x512) of 4/5/6 bpp tiles.
+    1 scrolling text layer (512x512, characters generated in vram), 4bpp chars.
+    1 scrolling pixel layer (512x256 pixels generated in pivot ram), 4bpp pixels.
+    2 sprite banks (for double buffering of sprites)
+    Sprites can be 4, 5 or 6 bpp
+    Sprite scaling.
+    Rowscroll on all playfields
+    Line by line zoom on all playfields
+    Column scroll on all playfields
+    Line by line sprite and playfield priority mixing
+
+    All special effects are controlled by an area in 'line ram'.  Typically
+    there are 256 values, one for each line of the screen (including clipped
+    lines at the top of the screen).  For example, at 0x8000 in lineram,
+    there are 4 sets of 256 values (one for each playfield) and each value
+    is the scale control for that line in the destination bitmap (screen).
+    Therefore each line can have a different zoom value for special effects.
+
+    This also applies to playfield priority, rowscroll, column scroll, sprite
+    priority and VRAM/pivot layers.
+
+    However - at the start of line ram there are also sets of 256 values
+    controlling each effect - effects can be selectively applied to individual
+    playfields or only certain lines out of the 256 can be active - in which
+    case the last allowed value can be latched (typically used so a game can
+    use one zoom or row value over the whole playfield).
+
+    The programmers of some of these games made strange use of flipscreen -
+    some games have all their graphics flipped in ROM, and use the flipscreen
+    bit to display them correctly!.
+
+    Most games display 232 scanlines, but some use lineram effects to clip
+    themselves to 224 or less.
+
+Memory Map:
+
+$000000 - $1FFFFF W	Rom
+$300000 - $30007F W	F3 Sound Bankswitch
+$400000 - $41FFFF R/W	Ram
+$440000 - $443FFF R/W	Tilemap palette ram
+$444000 - $447FFF R/W	Sprite palette ram
+$4A0000 - $4A0017 R/W	F3 Control
+$4A0000:
+	Writes to watchdog timer.
+
+	MSW: Test switch, coins, eeprom access: (Lower and upper byte are the same
+		$01 Active High		Eprom data bit
+		$02 Active Low		Service Mode
+		$04 Active Low		Unknown
+		$08 Active Low		Another service mode
+		$10 Active Low		Coin 1
+		$20 Active Low		Coin 2
+		$40 Active Low		Coin 3
+		$80 Active Low		Coin 4
+
+	LSW: Player Buttons, Start, Tilt, Service
+		$0001 Active Low	Button 1 Player 1
+		$0002 Active Low	Button 2 Player 1
+		$0004 Active Low	Button 3 Player 1
+		$0008 Active Low	Button 4 Player 1
+		$0010 Active Low	Button 1 Player 2
+		$0020 Active Low	Button 2 Player 2
+		$0040 Active Low	Button 3 Player 2
+		$0080 Active Low	Button 4 Player 2
+		$0100 Active Low	Tilt
+		$0200 Active Low	Service
+		$0400 Active Low	Service 2, only on some games
+		$0800 Active Low	Service 3, only on some games
+		$1000 Active Low	Start player 1
+		$2000 Active Low	Start player 2
+		$4000 Active Low	Start player 3
+		$8000 Active Low	Start player 4
+
+$4A0004:
+	MSW: Coin counters/lockouts
+
+	LSW: Joysticks (Player 1 &amp; 2)
+		$01 Active Low		Up player 1
+		$02 Active Low		Down player 1
+		$04 Active Low		Left player 1
+		$08 Active Low		Right player 1
+		$10 Active Low		Up player 2
+		$20 Active Low		Down player 2
+		$40 Active Low		Left player 2
+		$80 Active Low		Right player 2
+
+$4A0008: Analog control 1
+
+$4A000C: Analog control 2
+
+$4A0010: Player 3 &amp; 4 fire buttons (Player 2 top fire buttons in Kaiser Knuckle)
+	$0001 Active	Low Button 1 player 3
+	$0002 Active	Low Button 2 player 3
+	$0004 Active	Low Button 3 player 3
+	$0008 Active	Low Button 4 player 3
+	$0010 Active	Low Button 1 player 4
+	$0020 Active	Low Button 2 player 4
+	$0040 Active	Low Button 3 player 4
+	$0080 Active	Low Button 4 player 4
+
+$4A0014: Player 3 &amp; 4 joysticks (Player 1 top fire buttons in Kaiser Knuckle)
+	MSW: Coin counters/lockouts
+
+	LSW: Joysticks (Player 3 &amp; 4)
+		$01 Active Low		Up player 3
+		$02 Active Low		Down player 3
+		$04 Active Low		Left player 3
+		$08 Active Low		Right player 3
+		$10 Active Low		Up player 4
+		$20 Active Low		Down player 4
+		$40 Active Low		Left player 4
+		$80 Active Low		Right player 4
+
+$600000 - $60FFFF R/W	Sprite data
+$610000 - $61BFFF R/W	Playfield data
+$61C000 - $61DFFF R/W	Text layer.
+	Visible screen starts at $61C000 and ends at $61CE50, using the default scroll positions.
+	Each line starts $80 bytes from the last line, and shows 40 characters (80 bytes).
+	The screen is 232 characters tall.
+
+$61E000 - $61FFFF R/W	VRAM
+$620000 - $62FFFF R/W	Line ram
+$620000: Column line control ram (256 lines)
+	$100x:	Where bit 0 of x enables effect on playfield 1
+	Where bit 1 of x enables effect on playfield 2
+	Where bit 2 of x enables effect on playfield 3
+	Where bit 3 of x enables effect on playfield 4
+
+$620200: Line control ram for $5000 section.
+
+$620400: Line control ram for $6000 section.
+	$180x:	Where bit 0 of x latches sprite alpha value
+		Where bit 1 of x latches tilemap alpha value
+
+$620600: Sprite control ram
+	$1c0x:	Where x enables sprite control word for that line
+
+$620800: Zoom line control ram (256 lines)
+	$200x:	Where bit 0 of x enables effect on playfield 1
+		Where bit 1 of x enables effect on playfield 2
+		Where bit 2 of x enables effect on playfield 3
+		Where bit 3 of x enables effect on playfield 4
+
+$620A00: Assumed unused.
+
+$620C00: Rowscroll line control ram (256 lines)
+	$280x:	Where bit 0 of x enables effect on playfield 1
+		Where bit 1 of x enables effect on playfield 2
+		Where bit 2 of x enables effect on playfield 3
+		Where bit 3 of x enables effect on playfield 4
+
+$620E00: Priority line control ram (256 lines)
+	$2c0x:	Where bit 0 of x enables effect on playfield 1
+		Where bit 1 of x enables effect on playfield 2
+		Where bit 2 of x enables effect on playfield 3
+		Where bit 3 of x enables effect on playfield 4
+
+$624000: Column scroll &amp; clipping info
+
+$625000: Clip plane 0 (low bits)
+$625200: Clip plane 1 (low bits)
+$625400: Unused?
+$625600: Unused?
+$626000: Sync register
+
+$626004: Sprite alpha control
+	$FF00: VRAM/Pixel layer control
+	$A000 enables pixel layer for this line (Disables VRAM layer)
+	$2000 enables garbage pixels for this line (maybe another pixel bank?)
+	$0800 seems to set the vram layer to be opaque
+	Effect of other bits is unknown.
+
+	$00C0: Alpha mode for sprites with pri value $00
+	$0030: Alpha mode for sprites with pri value $00
+	$000c: Alpha mode for sprites with pri value $00
+	$0003: Alpha mode for sprites with pri value $00
+
+$626200: Alpha blending control
+
+$626400 - controls X zoom of tile - each tile collapses to 16 single colour lines
+	xxx1 - affects bottom playfield
+	xxx2 -
+	xxx4 -
+	xxx8 - affects top playfield
+	xxFx - x zoom - 0 - 1st pixel 16 times
+			1 - 1st pixel 8, then 2nd 8
+			8 - 2 per pixel
+
+	1xxx - interpret palette ram for this playfield line as 15 bit and bilinear filter framebuffer(??)
+	3xxx - interpret palette ram for this playfield line as 15 bit
+	7xxx - interpret palette ram for this playfield line as 24 bit palette
+	8xxx - interpret palette ram for this playfield line as 21 bit palette
+
+$626600: Background - background palette entry (under all tilemaps) (takes part in alpha blending)
+$627000: Pivot/vram layer enable
+$627200: VRAM layer priority
+$627400: Sprite clipping
+
+$627600: Sprite priority values
+	$F000: Relative priority for sprites with pri value $C0
+	$0F00: Relative priority for sprites with pri value $80
+	$00F0: Relative priority for sprites with pri value $40
+	$000F: Relative priority for sprites with pri value $00
+
+$628000: Playfield 1 scale (1 word per line, 256 lines, $80 = default no scale)
+$628200: Playfield 2/4 scale
+$628400: Playfield 3 scale
+
+$628600: Playfield 2/4 scale
+	$00FF - Y scale ($80 = no scale, &gt; $80 is zoom in, &lt; $80 is zoom out [$C0 is half height of $80])
+	$FF00 - X scale (0 = no scale, &gt; 0 = zoom in, [$8000 would be double length])
+
+	Playfield 2 &amp; 4 registers seem to be interleaved, playfield 2 Y zoom is stored where you would
+	expect playfield 4 y zoom to be and vice versa.
+
+$629000: Palette add (can affect opacity)
+
+$62A000: Playfield 1 rowscroll (1 word per line, 256 lines)
+$62A200: Playfield 2 rowscroll
+$62A400: Playfield 3 rowscroll
+$62A600: Playfield 4 rowscroll
+
+$62B000: Playfield 1 priority (1 word per line, 256 lines)
+$62B200: Playfield 2 priority
+$62B400: Playfield 3 priority
+$62B600: Playfield 4 priority
+	$F000 - Blend mode, $3000 = Normal, $7000 = Alpha A, $B000 = Alpha B, others disable line
+	$0800 - Clip line (totally disable line)
+	$0400 - Assumed unused
+	$0200 - If set enable clip plane 1
+	$0100 - If set enable clip plane 0
+	$00C0 - Assumed unused
+	$0020 - Enable clip inverse mode for plane 1
+	$0010 - Enable clip inverse mode for plane 0
+	$000F - Layer priority
+
+$62C000 - $62FFFF: Unused.
+
+$630000 - $63FFFF R/W	Pivot ram
+$660000 - $66000F W	F3 Control 0
+
+$660010 - $66001F W	F3 Control 1
+	Word 0- 3: X scroll values for the 4 playfields. ($F600 is default)
+	Word 4- 7: Y scroll values for the 4 playfields. ($F400 is default)
+	Word 8-11: Unused. Always zero.
+	Word   12: Pixel + VRAM playfields X scroll ($29 is default)
+	Word   13: Pixel + VRAM playfields Y scroll ($18 is default)
+	Word   14: Unused. Always zero.
+	Word   15: If set to $80, then 1024x512 playfields are used, else 512x512.
+
+$C00000 - $C007FF R/W	Sound CPU shared ram
+$C80000 - $C80003 W	F3 Sound Reset 0
+$C80100 - $C80103 W	F3 Sound Reset 1
+
+Graphics:
+	Palette:
+		Palette is stored as a 4 byte value ($00RRGGBB). Upper byte may be related to alpha?
+		Are the lower 2 bits of each color ignored?
+		Palette ram has room for 128 64 color palettes.
+
+	Text characters:
+		256 characters.
+		8 x 8 4 bit characters. Each character is 32 bytes long.
+		They are stored 2 pixels per byte, 4 sequential bits define a pixel
+		(00001111 22223333 - binary layout of 4 pixels 3,2,1,0).
+		Each 2 pixel group is stored right to left, and the pixels are stored in a byte right to left.
+
+	Tile characters:
+		16384 characters.
+		16 x 16 4-6 bit characters. Each character is 128 bytes long.
+		Characters are stored 2 pixels per byte (1 nibble per pixel, right pixel first), The 2 pixels groups
+		are stored left to right, The upper two bits are stored interleaved. The first byte is the lower bit of the first 8
+		pixels, followed by the upper bit of the first 8 pixels.
+
+	Sprite characters:
+		16384 characters.
+		16 x 16 4-6 bit characters. Each character is 128 bytes long.
+		(11110000 33332222 55554444 77776666 - binary layout of 8 pixels (4 bit) 7,6,5,4,3,2,1,0).
+
+Playfield tile info:
+	$C000 0000 - X/Y Flip
+	$3000 FFFF - Tile index
+	$0DFF 0000 - Colour (top 2 bits use not clear, always set)
+	$0200 0000 - Alpha blend mode
+
+F3 sprite format:
+	Word 0:	0xFFFF	Tile number (LSB)
+
+	Word 1:	$FF00	X zoom
+		$00FF	Y zoom
+
+	Word 2:	$03FF	X position
+
+	Word 3:	$03FF	Y position
+
+	Word 4:	$8000	Add 16 to sprite x position
+		$4000	If set use current x, if clear use saved x
+		$2000	Add 16 to sprite y position
+		$1000	If set use current y, if clear use saved y
+		$0800	Sprite block start
+		$0400	Use same colour on this sprite as block start
+		$0200	Y flip
+		$0100	X flip
+		$00FF	Colour
+
+	Word 5:	$FFFF	Tile number (MSB), probably only low bits used
+
+	Word 6:	$8000	If set, jump to sprite location in low bits
+			$03FF	Location to jump to.
+
+	Word 7:	$FFFF	Unused?  Always zero?
+
+	A blank entry is required between sprite blocks. The format is:
+	dc.l	$0000FFFF, $00000000, $00000000, $00000000
+
+Roms (for Puzzle Bobble 3):
+	68020 Code (32 bit data is interleaved across 4 roms):
+		e29-12.rom - Bytes 1 of 4.
+		e29-11.rom - Bytes 2 of 4.
+		e29-10.rom - Bytes 3 of 4.
+		e29-16.rom - Bytes 4 of 4.
+
+	68000 Code (16 bit data is interleaved across 2 roms):
+		e29-13.rom - Bytes 1 of 2.
+		e29-14.rom - Bytes 2 of 2.
+
+	Sprite Data (16 bit data is interleaved across 2 roms):
+		e29-02.rom - Bytes 1 of 2.
+		e29-01.rom - Bytes 2 of 2.
+
+	Tile Data (4-6 bit data, stored same as sprites for lower 4 bits, with upper two bits stored in seperate rom):
+		e29-08.rom - Bytes 1 of 2.
+		e29-07.rom - Bytes 2 of 2.
+		e29-06.rom - Upper 2 bits of each pixel packed 8 to a byte, planes split between
+		two bytes.
+
+	Sound Data (Each bank is stored in a rom, banks are 4MB, but do not have to be completely full):
+		Bank 1 empty
+		e29-03.rom - Bank 2 of 4, only uses 2MB.
+		e29-04.rom - Bank 3 of 4, only uses 2MB.
+		e29-05.rom - Bank 4 of 4, only uses 2MB.
